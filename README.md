@@ -26,6 +26,23 @@ This project provides an end-to-end pipeline for emotion classification, includi
 └── .env
 
 ---
+## 📦 Dataset
+
+The project supports:
+
+- "empathetic"
+- "dailydialog"
+- "goemotions"
+- "mixed
+
+Datasets are processed into:
+
+data/<dataset_name>/split/
+- train.jsonl
+- validation.jsonl
+- test.jsonl
+
+---
 
 ## ⚙️ Setup
 
@@ -46,7 +63,8 @@ GOOGLE_DRIVE_FOLDER_ID="Will assign by the owner"
 ```
 
 ---
-default dataset_link = ["dailydialog","empathetic","goemotions","mixed"]  # choose 1 to go
+
+default following dataset_link = ["dailydialog","empathetic","goemotions","mixed"]  # choose 1 to go
 
 ## 🚀 Usage
 
@@ -85,23 +103,6 @@ python main.py eval --switch google --dataset_link <dataset_link>
 
 ---
 
-## 📦 Dataset
-
-The project supports:
-
-- EmpatheticDialogues
-- DailyDialog
-- GoEmotions
-- Mixed
-
-Datasets are processed into:
-
-data/<dataset_name>/split/
-- train.jsonl
-- validation.jsonl
-- test.jsonl
-
----
 
 ## ☁️ Google Drive Integration
 
