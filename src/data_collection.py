@@ -6,13 +6,11 @@ import shutil
 from pathlib import Path
 
 
-def run_data_collection():
-    data_dir = Path("../data")
-    data_dir.mkdir(exist_ok=True)
-
+def run_data_collection(DATA_DIR,EMPATHETIC_URL,DAILYDIALOG_URL,GOEMOTIONS_URL):
     # empathetic_dialogues
-    print("empathetic_dialogues")
-    empathetic_dialogues = load_dataset("empathetic_dialogues", trust_remote_code=True)
+    print("empathetic_dialogues downloading......")
+    dir = Path(DATA_DIR)
+    empathetic_dialogues = load_dataset(EMPATHETIC_URL, trust_remote_code=True)
 
     for split in ["train", "validation", "test"]:
         rows = []
@@ -26,16 +24,17 @@ def run_data_collection():
             })
 
         df = pd.DataFrame(rows)
-        df.to_csv(data_dir / f"empathetic_dialogues_{split}.csv", index=False)
+        df.to_csv(dir / f"empathetic_dialogues_{split}.csv", index=False)
 
     # daily_dialog
+    print("dailydialog downloading......")
     kagglehub.dataset_download(
-        "thedevastator/dailydialog-unlock-the-conversation-potential-in",
-        output_dir=str(data_dir / "dailydialog"),
+        DAILYDIALOG_URL,
+        output_dir=str(dir / "dailydialog"),
     )
     # go_emotions
-    print("go_emotions")
-    go_emotions = load_dataset("go_emotions", trust_remote_code=True)
+    print("go_emotions downloading......")
+    go_emotions = load_dataset( GOEMOTIONS_URL,trust_remote_code=True)
 
     for split in ["train", "validation", "test"]:
         rows = []
@@ -49,12 +48,10 @@ def run_data_collection():
             })
 
         df = pd.DataFrame(rows)
-        df.to_csv(data_dir / f"go_emotions_{split}.csv", index=False)
+        df.to_csv(dir / f"go_emotions_{split}.csv", index=False)
 
 
-def move_and_rename_dailydialog():
-    src_dir = Path("../data/dailydialog")
-    dst_dir = Path("../data")
+def move_and_rename_dailydialog(src_dir,dst_dir):
 
     mapping = {
         "train.csv": "dailydialog_train.csv",
@@ -63,6 +60,8 @@ def move_and_rename_dailydialog():
     }
 
     for src_name, dst_name in mapping.items():
+        src_dir = Path(src_dir)
+        dst_dir = Path(dst_dir)
         src_file = src_dir / src_name
         dst_file = dst_dir / dst_name
 
@@ -71,3 +70,17 @@ def move_and_rename_dailydialog():
             print(f"Moved: {src_name} -> {dst_name}")
         else:
             print(f"Not found: {src_file}")
+
+def test_data_collection(dir):
+    print("test_data_collection")
+    dir = Path(dir)
+    # check whether the csv is output successfully or not
+
+    expected_files = [
+        "empathetic_dialogues_train.csv",
+        "go_emotions_train.csv",
+        "dailydialog_train.csv"
+    ]
+
+    for f in expected_files:
+        assert (dir / f).exists(), f"{f} not found"

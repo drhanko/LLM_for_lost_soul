@@ -1,178 +1,53 @@
+import os
+import re
+import ast
 import pandas as pd
+from ast import literal_eval
 
-
-
-label_map = {
-    # ----------------
-    # anger
-    # ----------------
-    "annoyed": "anger",
-    "annoyance": "anger",
-    "angry": "anger",
-    "anger": "anger",
-    "furious": "anger",
-    "disapproval": "anger",
-
-    # ----------------
-    # sadness
-    # ----------------
-    "sad": "sadness",
-    "sadness": "sadness",
-    "sentimental": "sadness",
-    "devastated": "sadness",
-    "disappointed": "sadness",
-    "grief": "sadness",
-    "remorse": "sadness",
-    "lonely": "sadness",
-    "guilty": "sadness",
-
-    # ----------------
-    # joy
-    # ----------------
-    "joy": "joy",
-    "joyful": "joy",
-    "happiness": "joy",
-    "amusement": "joy",
-    "admiration": "joy",
-    "love": "joy",
-    "proud": "joy",
-    "grateful": "joy",
-    "gratitude": "joy",
-    "excited": "joy",
-    "excitement": "joy",
-    "optimism": "joy",
-    "relief": "joy",
-    "content": "joy",
-    "confident": "joy",
-    "faithful": "joy",
-    "trusting": "joy",
-    "caring": "joy",
-    "hopeful": "joy",
-    "impressed": "joy",
-
-    # ----------------
-    # fear
-    # ----------------
-    "fear": "fear",
-    "afraid": "fear",
-    "terrified": "fear",
-    "nervous": "fear",
-    "nervousness": "fear",
-    "anxious": "fear",
-    "apprehensive": "fear",
-
-    # ----------------
-    # disgust
-    # ----------------
-    "disgust": "disgust",
-    "disgusted": "disgust",
-
-    # ----------------
-    # surprise
-    # ----------------
-    "surprised": "surprise",
-    "surprise": "surprise",
-    "realization": "surprise",
-
-    # ----------------
-    # neutral
-    # ----------------
-    "neutral": "neutral",
-    "approval": "neutral",
-    "prepared": "neutral",
-    "curiosity": "neutral",
-    "confusion": "neutral",
-    "desire": "neutral",
-    "anticipating": "neutral",
-    "nostalgic": "neutral",
-    "embarrassed": "neutral",
-    "embarrassment": "neutral",
-}
-# for empathetic
-emotion_map_emp = [
-    "afraid",
-    "angry",
-    "annoyed",
-    "anticipating",
-    "anxious",
-    "apprehensive",
-    "ashamed",
-    "caring",
-    "confident",
-    "content",
-    "devastated",
-    "disappointed",
-    "disgusted",
-    "embarrassed",
-    "excited",
-    "faithful",
-    "furious",
-    "grateful",
-    "guilty",
-    "hopeful",
-    "impressed",
-    "jealous",
-    "joyful",
-    "lonely",
-    "nostalgic",
-    "prepared",
-    "proud",
-    "sad",
-    "sentimental",
-    "surprised",
-    "terrified",
-    "trusting"
-]
-
-# for daily dialog
-act_map = {
-    1: "inform",
-    2: "question",
-    3: "directive",
-    4: "commissive"
+# 3-class sentiment mapping
+POSITIVE = {
+    "joy", "joyful", "happiness", "amusement", "admiration", "love", "proud",
+    "grateful", "gratitude", "excited", "excitement", "optimism", "relief",
+    "content", "confident", "faithful", "trusting", "caring", "hopeful",
+    "impressed", "approval", "desire"
 }
 
-emotion_map_daily = {
-    0: "neutral",
-    1: "anger",
-    2: "disgust",
-    3: "fear",
-    4: "happiness",
-    5: "sadness",
-    6: "surprise"
+NEGATIVE = {
+    "sad", "sadness", "sentimental", "devastated", "disappointed", "grief",
+    "remorse", "lonely", "guilty", "anger", "annoyed", "annoyance", "angry",
+    "furious", "disapproval", "fear", "afraid", "terrified", "nervous",
+    "nervousness", "anxious", "apprehensive", "disgust", "disgusted",
+    "embarrassed", "embarrassment", "ashamed", "jealous"
 }
 
-#
-emotion_map_go = {
-  0: "admiration",
-  1: "amusement",
-  2: "anger",
-  3: "annoyance",
-  4: "approval",
-  5: "caring",
-  6: "confusion",
-  7: "curiosity",
-  8: "desire",
-  9: "disappointment",
-  10: "disapproval",
-  11: "disgust",
-  12: "embarrassment",
-  13: "excitement",
-  14: "fear",
-  15: "gratitude",
-  16: "grief",
-  17: "joy",
-  18: "love",
-  19: "nervousness",
-  20: "optimism",
-  21: "pride",
-  22: "realization",
-  23: "relief",
-  24: "remorse",
-  25: "sadness",
-  26: "surprise",
-  27: "neutral"
+NEUTRAL = {
+    "neutral", "prepared", "curiosity", "confusion", "nostalgic"
 }
+
+# exclude the surprise label. This label can be categorized neither POSITIVE, NEGATIVE and NEUTRAL.
+SURPRISE = {"surprise", "surprised", "realization"}
+
+
+
+# condense the label from multiple to 3
+def emotion_to_sentiment(emotion):
+    if emotion is None:
+        return None
+    e = str(emotion).strip().lower()
+    if not e:
+        return None
+    if e in SURPRISE:
+        return None
+    if e in POSITIVE:
+        return "positive"
+    if e in NEGATIVE:
+        return "negative"
+    if e in NEUTRAL:
+        return "neutral"
+    return None
+
+
+# clean the section of the data
 def clean_text(text):
     if text is None:
         return ""
@@ -181,23 +56,23 @@ def clean_text(text):
     text = re.sub(r"\s+", " ", text).strip()
     return text
 
+
 def load_csv(path):
     return pd.read_csv(path)
+
 
 def save_df(df, path):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     df.to_json(path, orient="records", lines=True, force_ascii=False)
 
-# =========================
-#  Standardize column for these datasets
-#     "source": "empathetic_dialogues"/"dailydialog"/"go_emotions"
-#     "split": "train"/"validation"/"test",
-#     "instruction": "Respond empathetically."/"Predict the emotion."/"Respond naturally." (Alpaca / Instruction tuning)
-#     "input": user_input, (input → output mapping)
-#     "output": emotions,
-#     "meta": appendix
-# =========================
 
+def split_dialog_text(dialog_text):
+    utterances = re.split(r'(?<=[.!?])\s+', dialog_text.strip())
+    utterances = [x.strip() for x in utterances if x.strip()]
+    return utterances
+
+
+# format functions
 def format_empathetic(df, split_name):
     rows = []
 
@@ -208,15 +83,14 @@ def format_empathetic(df, split_name):
         if not text or not emotion:
             continue
 
-        try:
-            gen_emo = label_map.get(emotion.lower(), "neutral")
-        except:
-            gen_emo = "neutral"
+        gen_emo = emotion_to_sentiment(emotion)
+        if gen_emo is None:
+            continue  # skip surprise and unknown labels
 
         rows.append({
             "source": "empathetic_dialogues",
             "split": split_name,
-            "instruction": "Respond empathetically.",
+            "instruction": "Classify the sentiment.",
             "input": text,
             "output": gen_emo,
             "meta": str(r.get("conversation_id", ""))
@@ -225,21 +99,32 @@ def format_empathetic(df, split_name):
     return rows
 
 
-def split_dialog_text(dialog_text):
-    # 先用標點切句
-    utterances = re.split(r'(?<=[.!?])\s+', dialog_text.strip())
-    utterances = [x.strip() for x in utterances if x.strip()]
-    return utterances
-
 def format_dailydialog(df, split_name):
     rows = []
+
+    # transform the numbers into text labels
+    emotion_map_daily = {
+        0: "neutral",
+        1: "anger",
+        2: "disgust",
+        3: "fear",
+        4: "happiness",
+        5: "sadness",
+        6: "surprise"
+    }
+
+    act_map = {
+        1: "inform",
+        2: "question",
+        3: "directive",
+        4: "commissive"
+    }
 
     for _, r in df.iterrows():
         dialog = r.get("dialog", "")
         acts = r.get("act", "")
         emotions = r.get("emotion", "")
 
-        # dialog 是 list，而且只有一個完整字串
         if isinstance(dialog, str):
             try:
                 dialog = literal_eval(dialog)
@@ -247,13 +132,11 @@ def format_dailydialog(df, split_name):
                 dialog = [dialog]
 
         if isinstance(dialog, list) and len(dialog) == 1:
-            dialog_text = dialog[0]
-            dialog = split_dialog_text(dialog_text)
+            dialog = split_dialog_text(dialog[0])
 
         if not isinstance(dialog, list):
             continue
 
-        # act / emotion 轉 list
         if isinstance(acts, str):
             try:
                 acts = literal_eval(acts)
@@ -270,26 +153,28 @@ def format_dailydialog(df, split_name):
 
         for i in range(n):
             text = clean_text(dialog[i])
-
-
             if not text:
                 continue
 
             try:
                 raw_emotion = emotion_map_daily[int(emotions[i])]
-                gen_emo = label_map.get(raw_emotion.lower(), "neutral")
+                gen_emo = emotion_to_sentiment(raw_emotion)
             except:
-                gen_emo = "neutral"
+                gen_emo = None
+
+            if gen_emo is None:
+                continue  # skip surprise / None labels
 
             try:
                 act_text = act_map.get(int(acts[i]), "unknown")
             except:
                 act_text = "unknown"
 
+            # create prompt for the model training
             rows.append({
                 "source": "dailydialog",
                 "split": split_name,
-                "instruction": "Predict the emotion.",
+                "instruction": "Classify the sentiment.",
                 "input": text,
                 "output": gen_emo,
                 "meta": f"act={act_text}"
@@ -297,8 +182,61 @@ def format_dailydialog(df, split_name):
 
     return rows
 
+
+def goemotion_to_single_label(raw_labels, emotion_map_go):
+    try:
+        raw_labels = ast.literal_eval(raw_labels)
+        if not isinstance(raw_labels, list):
+            return None
+    except:
+        return None
+
+    for first_label in raw_labels:
+        try:
+            raw_name = emotion_map_go[int(first_label)]
+            sent = emotion_to_sentiment(raw_name)
+            if sent is not None:
+                return sent
+        except:
+            continue
+
+    return None
+
+
 def format_goemotions(df, split_name):
     rows = []
+
+    # transform the numbers into text labels
+    emotion_map_go = {
+        0: "admiration",
+        1: "amusement",
+        2: "anger",
+        3: "annoyance",
+        4: "approval",
+        5: "caring",
+        6: "confusion",
+        7: "curiosity",
+        8: "desire",
+        9: "disappointment",
+        10: "disapproval",
+        11: "disgust",
+        12: "embarrassment",
+        13: "excitement",
+        14: "fear",
+        15: "gratitude",
+        16: "grief",
+        17: "joy",
+        18: "love",
+        19: "nervousness",
+        20: "optimism",
+        21: "pride",
+        22: "realization",
+        23: "relief",
+        24: "remorse",
+        25: "sadness",
+        26: "surprise",
+        27: "neutral"
+    }
 
     for _, r in df.iterrows():
         text = clean_text(r.get("text", ""))
@@ -307,67 +245,42 @@ def format_goemotions(df, split_name):
         if not text:
             continue
 
-        output_label = goemotion_to_single_label(
-            raw_labels,
-            label_map,
-            emotion_map_go
-        )
-        gen_emo = label_map.get(output_label.lower(), "neutral")
-
-
-        # print(output_label)
-        # print(gen_emo)
-
-        try:
-            gen_emo = label_map.get(output_label.lower(), "neutral")
-        except:
-            gen_emo = "neutral"
+        gen_emo = goemotion_to_single_label(raw_labels, emotion_map_go)
+        if gen_emo is None:
+            continue  # skip surprise / None labels
 
         rows.append({
             "source": "go_emotions",
             "split": split_name,
-            "instruction": "Predict the emotion label from the text.",
+            "instruction": "Classify the sentiment.",
             "input": text,
             "output": gen_emo,
             "meta": ""
         })
 
     return rows
-# There are multiple labels for 1 sentence. Therefore, either pick the first emotion as label or use multi-label method
 
-# goemotion_to_single_label: pick the first emotion as label
-def goemotion_to_single_label(raw_labels, label_map, emotion_map_go):
-    # 1. 轉成 list
-    raw_labels = ast.literal_eval(raw_labels)
-    first_label = raw_labels[0]
+# avoid  chan_len > 1000 row data. This kind of data will ruin the results
+def add_char_len(df):
+    tmp = df.copy()
+    tmp["char_len"] = (
+        "<s>[INST] " + tmp["instruction"].astype(str) + "\n\n" +
+        tmp["input"].astype(str) + " [/INST] " +
+        tmp["output"].astype(str)
+    ).str.len()
+    return tmp
 
-    try:
-        # 3. 數字 → 原始 label
-        raw_name = emotion_map_go[int(first_label)]
-
-        # 4. 原始 label → 統一 label
-        final_label = label_map.get(raw_name.lower(), "neutral")
-
-        return final_label
-
-    except Exception:
-        return "neutral"
-
-
-import os
-import re
-import ast
-import pandas as pd
-from ast import literal_eval
+def filter_by_char_len(df, max_len=1000):
+    df = add_char_len(df)
+    before = len(df)
+    df = df[df["char_len"] <= max_len].copy()
+    after = len(df)
+    print(f"Filter char_len > {max_len}: {before} -> {after}")
+    return df.drop(columns=["char_len"])
+#####
 
 
-# ---------- 你原本的 mapping 保留 ----------
-# label_map, emotion_map_daily, emotion_map_go, act_map, clean_text, load_csv, save_df
-# format_empathetic, format_dailydialog, format_goemotions, goemotion_to_single_label
-# 都可以沿用
-
-
-def global_balanced_sample(df, label_col="output", total_n=5000, random_state=404):
+def global_balanced_sample(df, label_col="output", total_n=10000, random_state=404):
     if df.empty:
         return df
 
@@ -399,52 +312,43 @@ def global_balanced_sample(df, label_col="output", total_n=5000, random_state=40
 
 
 def build_split_df(base, split_name):
-    if split_name == "train":
+    rows = []
+
+    if split_name == "mixed":
         ed = load_csv(f"{base}/empathetic_dialogues_train.csv")
         dd = load_csv(f"{base}/dailydialog_train.csv")
         ge = load_csv(f"{base}/go_emotions_train.csv")
-    elif split_name == "validation":
-        ed = load_csv(f"{base}/empathetic_dialogues_validation.csv")
-        dd = load_csv(f"{base}/dailydialog_validation.csv")
-        ge = load_csv(f"{base}/go_emotions_validation.csv")
-    elif split_name == "test":
-        ed = load_csv(f"{base}/empathetic_dialogues_test.csv")
-        dd = load_csv(f"{base}/dailydialog_test.csv")
-        ge = load_csv(f"{base}/go_emotions_test.csv")
+        rows += format_empathetic(ed, "train")
+        rows += format_dailydialog(dd, "train")
+        rows += format_goemotions(ge, "train")
+    elif split_name == "empathetic":
+        ed = load_csv(f"{base}/empathetic_dialogues_train.csv")
+        rows += format_empathetic(ed, "train")
+    elif split_name == "dailydialog":
+        dd = load_csv(f"{base}/dailydialog_train.csv")
+        rows += format_dailydialog(dd, "train")
+    elif split_name == "goemotions":
+        ge = load_csv(f"{base}/go_emotions_train.csv")
+        rows += format_goemotions(ge, "train")
     else:
         raise ValueError(f"Unknown split: {split_name}")
-
-    rows = []
-    rows += format_empathetic(ed, split_name)
-    rows += format_dailydialog(dd, split_name)
-    rows += format_goemotions(ge, split_name)
 
     return pd.DataFrame(rows)
 
 
-def data_prerpocessing():
+def data_prerpocessing(name):
     base = "../data"
 
-    # 先做三個 split
-    train_df = build_split_df(base, "train")
-    val_df = build_split_df(base, "validation")
-    test_df = build_split_df(base, "test")
+    #build
+    ready_to_split_df = build_split_df(base,name)
 
-    # 再各自做全局平衡
-    train_df_balanced = global_balanced_sample(train_df, total_n=15000, random_state=404)
-    val_df_balanced   = global_balanced_sample(val_df,   total_n=3000,  random_state=404)
-    test_df_balanced  = global_balanced_sample(test_df,  total_n=3000,  random_state=404)
+    #remove the test length > 1000
+    ready_to_split_df = filter_by_char_len(ready_to_split_df, max_len=1000)
 
-    # 存檔
-    save_df(train_df_balanced, "../data/clean_data/train.jsonl")
-    save_df(val_df_balanced,   "../data/clean_data/validation.jsonl")
-    save_df(test_df_balanced,  "../data/clean_data/test.jsonl")
+    # balanced sample
+    ready_to_split_df_balanced = global_balanced_sample(ready_to_split_df, total_n=10000, random_state=404)
+    save_df(ready_to_split_df_balanced, f"../data/clean_data/{name}/ready_to_split.jsonl")
 
     print("Saved processed datasets.")
-    print("train:", len(train_df_balanced))
-    print("validation:", len(val_df_balanced))
-    print("test:", len(test_df_balanced))
-    print("train label counts:\n", train_df_balanced["output"].value_counts())
-    print("validation label counts:\n", val_df_balanced["output"].value_counts())
-    print("test label counts:\n", test_df_balanced["output"].value_counts())
-
+    print("train:", len(ready_to_split_df_balanced))
+    print("train label counts:\n", ready_to_split_df_balanced["output"].value_counts())
