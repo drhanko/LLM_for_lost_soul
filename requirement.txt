@@ -1,6 +1,15 @@
 pandas
-from datasets import load_dataset
+datasets
 kagglehub
 shutil
 pathlib
-from transformers import AutoTokenizer
+transformers
+gdown
+dotenv
+torch
+json
+copy
+random
+numpy
+scikit-learn
+python-dotenv
