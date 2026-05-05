@@ -14,6 +14,13 @@ RESULTS_DIR = "../results"
 
 # I put GOOGLE_DRIVE_FOLDER_ID in config.py instead of .env in order to pass the final. After the final I will use .env instead of config.py
 GOOGLE_DRIVE_FOLDER_ID= "1-lOi108h0d-qtnNML3PddIV6Pa_p-EN7"
+
+
+GOOGLE_DRIVE_FOLDER_ID_mixed_data = "12KzpJvHXgyJbRS6rGDvLgOZCGs9Iqn19"
+GOOGLE_DRIVE_FOLDER_ID_empathetic = "17FHjOw0nTmZS4OfttqGqBgUgoH6r6wct"
+GOOGLE_DRIVE_FOLDER_ID_goemotions = "1mi9JczNMSsKejEA8-ppNCEEsSqmKpD5j"
+GOOGLE_DRIVE_FOLDER_ID_dailydialog = "1UiiZyRopWVYF7HDyDph4yx3KBWZs8KGW"
+
 # data sources configuration
 EMPATHETIC_URL = "empathetic_dialogues"
 DAILYDIALOG_URL = "thedevastator/dailydialog-unlock-the-conversation-potential-in"

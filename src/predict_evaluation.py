@@ -125,11 +125,11 @@ def plot_multiclass_roc(y_true, y_prob, class_names, SAVE_PATH=None):
         plt.savefig(SAVE_PATH, dpi=200, bbox_inches="tight")
         print(f"ROC figure saved to: {SAVE_PATH}")
 
-    plt.show()
+    # plt.show()
     return auc_macro
 
 
-def plot_precision_recall_bars(y_true, y_pred, class_names, title, save_path=None):
+def plot_precision_recall_bars(y_true, y_pred, class_names, title, SAVE_PATH=None):
     precision, recall, _, support = precision_recall_fscore_support(
         y_true,
         y_pred,
@@ -165,18 +165,18 @@ def plot_precision_recall_bars(y_true, y_pred, class_names, title, save_path=Non
                 fontsize=10
             )
 
-    if save_path is not None:
-        plt.savefig(save_path, dpi=200, bbox_inches="tight")
-        print(f"Precision/Recall figure saved to: {save_path}")
+    if SAVE_PATH is not None:
+        plt.savefig(SAVE_PATH, dpi=200, bbox_inches="tight")
+        print(f"Precision/Recall figure saved to: {SAVE_PATH}")
 
-    plt.show()
+    # plt.show()
 
     print("Per-class precision:", dict(zip(class_names, np.round(precision, 4))))
     print("Per-class recall   :", dict(zip(class_names, np.round(recall, 4))))
     print("Support            :", dict(zip(class_names, support)))
 
 
-def plot_f1_acc_auc_metrics(metrics_dict, title, save_path=None):
+def plot_f1_acc_auc_metrics(metrics_dict, title, SAVE_PATH=None):
     acc = metrics_dict["accuracy"]
     f1 = metrics_dict["f1_macro"]
     auc = metrics_dict["auc"]
@@ -200,9 +200,13 @@ def plot_f1_acc_auc_metrics(metrics_dict, title, save_path=None):
             va="center"
         )
 
+    if SAVE_PATH is not None:
+        plt.savefig(SAVE_PATH, dpi=200, bbox_inches="tight")
+        print(f"Precision/Recall figure saved to: {SAVE_PATH}")
+
     plt.tight_layout()
 
-    plt.show()
+    # plt.show()
 
 def evaluation(mode ,SPECIFIC_DATASET):
 
@@ -225,10 +229,43 @@ def evaluation(mode ,SPECIFIC_DATASET):
 
         # folder_id = os.getenv("GOOGLE_DRIVE_FOLDER_ID")
         #I put GOOGLE_DRIVE_FOLDER_ID in config.py instead of .env in order to pass the final. After the final I will use .env instead of config.py
-        folder_id = GOOGLE_DRIVE_FOLDER_ID
-        url = f"https://drive.google.com/drive/folders/{folder_id}"
-        print("[INFO] Downloading folder...")
-        gdown.download_folder(url, output=RESULTS_DIR, quiet=False, use_cookies=False)
+        # folder_id = GOOGLE_DRIVE_FOLDER_ID
+        # url = f"https://drive.google.com/drive/folders/{folder_id}"
+        # print("[INFO] Downloading folder...")
+        # gdown.download_folder(url, output=RESULTS_DIR, quiet=False, use_cookies=False)
+
+        if SPECIFIC_DATASET =="mixed":
+            folder_id = GOOGLE_DRIVE_FOLDER_ID_mixed_data
+            url = f"https://drive.google.com/drive/folders/{folder_id}"
+            print("[INFO] Downloading folder...")
+            path = f"{RESULTS_DIR}/{SPECIFIC_DATASET}"
+            gdown.download_folder(url, output=path, quiet=False)
+        elif SPECIFIC_DATASET == "empathetic":
+            folder_id = GOOGLE_DRIVE_FOLDER_ID_empathetic
+            url = f"https://drive.google.com/drive/folders/{folder_id}"
+            print("[INFO] Downloading folder...")
+            path = f"{RESULTS_DIR}/{SPECIFIC_DATASET}"
+            gdown.download_folder(url, output=path, quiet=False)
+        elif SPECIFIC_DATASET == "dailydialog":
+            folder_id = GOOGLE_DRIVE_FOLDER_ID_dailydialog
+            url = f"https://drive.google.com/drive/folders/{folder_id}"
+            print("[INFO] Downloading folder...")
+            path = f"{RESULTS_DIR}/{SPECIFIC_DATASET}"
+            gdown.download_folder(url, output=path, quiet=False)
+        elif SPECIFIC_DATASET == "goemotions":
+            folder_id = GOOGLE_DRIVE_FOLDER_ID_goemotions
+            url = f"https://drive.google.com/drive/folders/{folder_id}"
+            print("[INFO] Downloading folder...")
+            path = f"{RESULTS_DIR}/{SPECIFIC_DATASET}"
+            gdown.download_folder(url, output=path, quiet=False)
+        else:
+            return ValueError("Check your dataset")
+
+
+
+
+
+
 
         MODEL_DIRS = [
             f"{RESULTS_DIR}/{SPECIFIC_DATASET}/final_models/seed_42/best_model",
@@ -285,7 +322,7 @@ def evaluation(mode ,SPECIFIC_DATASET):
         val_labels,
         val_mix,
         LABELS,
-        save_path="/content/roc_auc_val.png"
+        SAVE_PATH=f"{path}/roc_auc_val.png"
     )
 
     val_preds = np.argmax(val_mix, axis=-1)
@@ -294,14 +331,14 @@ def evaluation(mode ,SPECIFIC_DATASET):
         val_preds,
         LABELS,
         title="Validation Precision / Recall",
-        save_path="/content/precision_recall_val.png"
+        SAVE_PATH=f"{path}/precision_recall_val.png"
     )
 
     val_metrics["auc"] = auc_val
     plot_f1_acc_auc_metrics(
         val_metrics,
         title="Validation Stage",
-        save_path="/content/f1_acc_auc_metrics_val.png"
+        SAVE_PATH=f"{path}/f1_acc_auc_metrics_val.png"
     )
 
     print("\nRunning test inference...")
@@ -325,7 +362,7 @@ def evaluation(mode ,SPECIFIC_DATASET):
         test_labels,
         test_mix,
         LABELS,
-        save_path="/content/roc_auc_test.png"
+        SAVE_PATH=f"{path}/roc_auc_test.png"
     )
 
     test_preds = np.argmax(test_mix, axis=-1)
@@ -334,7 +371,7 @@ def evaluation(mode ,SPECIFIC_DATASET):
         test_preds,
         LABELS,
         title="Test Precision / Recall",
-        save_path="/content/precision_recall_test.png"
+        SAVE_PATH=f"{path}/precision_recall_test.png"
     )
 
     test_metrics["auc"] = auc_test
@@ -344,7 +381,7 @@ def evaluation(mode ,SPECIFIC_DATASET):
     plot_f1_acc_auc_metrics(
         test_metrics,
         title="Test Stage",
-        save_path="/content/f1_acc_auc_metrics_test.png"
+        SAVE_PATH=f"{path}/f1_acc_auc_metrics_test.png"
     )
 
     preds = np.argmax(test_mix, axis=-1)

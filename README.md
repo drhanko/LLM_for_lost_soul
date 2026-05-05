@@ -33,7 +33,7 @@ The project supports:
 - "empathetic"
 - "dailydialog"
 - "goemotions"
-- "mixed
+- "mixed"
 
 Datasets are processed into:
 
@@ -143,7 +143,7 @@ results/
 
 Feel free to open an issue for questions or improvements.
 
-## AI portion
+## AI portion (Only ChatGPT)
 1.Readme(protion modified)
 2.torch setting (protion modified)
 3 tokenize setting (protion modified)

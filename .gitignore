@@ -138,6 +138,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+results/
+data/
 
 # ignore all doc files
 doc/*
