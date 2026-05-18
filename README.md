@@ -1,5 +1,4 @@
-# Final-project-in-analyse-system
-# NLP Emotion Classification Pipeline
+# llm-roberta-based-sentiment-classification-with-ensemble-approach
 
 This project provides an end-to-end pipeline for emotion classification, including:
 
@@ -143,7 +142,3 @@ results/
 
 Feel free to open an issue for questions or improvements.
 
-## AI portion (Only ChatGPT)
-1.Readme(protion modified)
-2.torch setting (protion modified)
-3 tokenize setting (protion modified)
